@@ -109,11 +109,11 @@ class Powerline:
         spaces = ' ' * (self.width - leftWidth - rightWidth)
         
         if self.side == 'both':
-            line = leftText + spaces + rightText + "\n" + downText
+            line = "\n" + leftText + spaces + rightText + "\n" + downText
         elif self.side == 'right':
             line = rightText
         else: #left
-            line = leftText + "\n" + downText
+            line = "\n" + leftText + "\n" + downText
         
         return line
         
