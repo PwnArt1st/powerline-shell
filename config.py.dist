@@ -8,6 +8,7 @@
 
 # segments displayed on the left
 SEGMENTS = [
+    'hostname',   # Show the current hostname
     'ssh',        # Show a padlock when ssh-ing from another machine
     'cwd',        # Show the current directory.
     'read_only',  # Show a padlock if the current user has no write access
@@ -21,7 +22,6 @@ SEGMENTS_RIGHT = [
 
 # segments displayed on the second line
 SEGMENTS_DOWN = [
-    'hostname',   # Show the current hostname
     'username',   # Show the current user's username
     'hand',       # Show a 'middlefinger' if root, 'hand' otherwise
 ]
