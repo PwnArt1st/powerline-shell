@@ -30,9 +30,23 @@ if __name__ == "__main__":
     if config.THEME != 'default':
         source += load_source(os.path.join(THEMES_DIR, config.THEME + '.py'))
 
+    source += "\npowerline.appendMode('left')\n"
     for segment in config.SEGMENTS:
         source += load_source(os.path.join(SEGMENTS_DIR, segment + '.py'))
+        # assumes each segment file will have a function called
+        # add_segment__[segment] that accepts the powerline object
+        source += 'add_{}_segment(powerline)\n'.format(segment)
 
+    source += "\npowerline.appendMode('right')\n"
+    for segment in config.SEGMENTS_RIGHT:
+        source += load_source(os.path.join(SEGMENTS_DIR, segment + '.py'))
+        # assumes each segment file will have a function called
+        # add_segment__[segment] that accepts the powerline object
+        source += 'add_{}_segment(powerline)\n'.format(segment)
+
+    source += "\npowerline.appendMode('down')\n"
+    for segment in config.SEGMENTS_DOWN:
+        source += load_source(os.path.join(SEGMENTS_DIR, segment + '.py'))
         # assumes each segment file will have a function called
         # add_segment__[segment] that accepts the powerline object
         source += 'add_{}_segment(powerline)\n'.format(segment)

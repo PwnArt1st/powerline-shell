@@ -3,13 +3,13 @@ import subprocess
 import os
 
 GIT_SYMBOLS = {
-    'detached': u'\u2693',
-    'ahead': u'\u2B06',
-    'behind': u'\u2B07',
-    'staged': u'\u2714',
-    'notstaged': u'\u270E',
+    'detached': u'\u26d4\ufe0f',
+    'ahead': u'\u2B06\uFE0F',
+    'behind': u'\u2B07\uFE0F',
+    'staged': u'\u2705',
+    'notstaged': u'\u270F\uFE0F',
     'untracked': u'\u2753',
-    'conflicted': u'\u273C'
+    'conflicted': u'\u26a0\ufe0f',
 }
 
 def get_PATH():
@@ -100,7 +100,7 @@ def add_git_segment(powerline):
         bg = Color.REPO_DIRTY_BG
         fg = Color.REPO_DIRTY_FG
 
-    powerline.append(' %s ' % branch, fg, bg)
+    powerline.append(u' \ue0a0 %s ' % branch, fg, bg)
 
     def _add(_dict, _key, fg, bg):
         if _dict[_key]:

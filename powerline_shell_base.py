@@ -4,7 +4,10 @@ from __future__ import print_function
 
 import argparse
 import os
+import re
 import sys
+reload(sys) # ugly hack to access sys.setdefaultencoding
+sys.setdefaultencoding('utf-8')
 
 py3 = sys.version_info.major == 3
 
@@ -19,13 +22,16 @@ class Powerline:
             'lock': 'RO',
             'network': 'SSH',
             'separator': u'\u25B6',
+            'separator_right': u'\uE0B2',
             'separator_thin': u'\u276F'
         },
         'patched': {
             'lock': u'\uE0A2',
             'network': u'\uE0A2',
             'separator': u'\uE0B0',
-            'separator_thin': u'\uE0B1'
+            'separator_thin': u'\uE0B1',
+            'separator_right': u'\uE0B2',
+            'separator_right_thin': u'\uE0B3',
         },
         'flat': {
             'lock': '',
@@ -41,7 +47,7 @@ class Powerline:
         'bare': '%s',
     }
 
-    def __init__(self, args, cwd):
+    def __init__(self, args, cwd, width=0):
         self.args = args
         self.cwd = cwd
         mode, shell = args.mode, args.shell
@@ -51,7 +57,12 @@ class Powerline:
         self.network = Powerline.symbols[mode]['network']
         self.separator = Powerline.symbols[mode]['separator']
         self.separator_thin = Powerline.symbols[mode]['separator_thin']
+        self.separator_right = Powerline.symbols[mode]['separator_right']
         self.segments = []
+        self.segments_right = []
+        self.segments_down = []
+        self.width=width
+        self.mode='left'
 
     def color(self, prefix, code):
         if code is None:
@@ -66,29 +77,89 @@ class Powerline:
         return self.color('48', code)
 
     def append(self, content, fg, bg, separator=None, separator_fg=None):
-        self.segments.append((content, fg, bg,
+        segment=(content, fg, bg,
             separator if separator is not None else self.separator,
-            separator_fg if separator_fg is not None else bg))
-
-    def draw(self):
-        text = (''.join(self.draw_segment(i) for i in range(len(self.segments)))
-                + self.reset) + ' '
-        if py3:
-            return text
+            separator_fg if separator_fg is not None else bg)
+        
+        if self.mode == 'right':
+            self.segments_right.append(segment)
+        elif self.mode == 'down':
+            self.segments_down.append(segment)
         else:
-            return text.encode('utf-8')
+            self.segments.append(segment)
 
-    def draw_segment(self, idx):
-        segment = self.segments[idx]
-        next_segment = self.segments[idx + 1] if idx < len(self.segments)-1 else None
+    def appendMode(self, mode='left'):
+        self.mode = mode
+    
+    def draw(self):
+        # text = (''.join(self.draw_segment(i) for i in range(len(self.segments)))
+        #         + self.reset) + u' \n \U0001F449  '
+        # if py3:
+        #     return text
+        # else:
+        #     return text.encode('utf-8')
+        
+        leftSegmentsText = [self.draw_segment(idx) for idx in range(len(self.segments))]
+        rightSegmentsText = [self.draw_segment(idx, "right") for idx in range(len(self.segments_right))]
+        downSegmentsText = [self.draw_segment(idx, "down") for idx in range(len(self.segments_down))]
+        
+        leftText = u''.join(leftSegmentsText) + self.reset + ' '
+        rightText = u''.join(rightSegmentsText) + self.reset
+        downText = u''.join(downSegmentsText) + self.reset + ' '
+        
+        leftRawText  = u''.join([segment[0] + self.separator for segment in self.segments]) + self.reset + ' '
+        rightRawText = u''.join([segment[0] + self.separator for segment in self.segments_right]) + self.reset + ' '
+        
+        leftWidth = len(leftRawText.encode("ascii","replace"))
+        rightWidth = len(rightRawText.encode("ascii","replace"))
+        spaces = ' ' * (self.width - leftWidth - rightWidth)
+        
+        line = leftText + spaces + rightText + "\n" + downText
+        
+        return line
+        
+    def segment_length(self, idx, source=None):
+        if source == "right":
+            segment = self.segments_right[idx]
+            next_segment = self.segments_right[idx - 1] if idx > 0 else None
+        elif source == "down":
+            segment = self.segments_down[idx]
+            next_segment = self.segments_down[idx + 1] if idx < len(self.segments_down)-1 else None
+        else:
+            segment = self.segments[idx]
+            next_segment = self.segments[idx + 1] if idx < len(self.segments)-1 else None
 
-        return ''.join((
-            self.fgcolor(segment[1]),
-            self.bgcolor(segment[2]),
-            segment[0],
-            self.bgcolor(next_segment[2]) if next_segment else self.reset,
-            self.fgcolor(segment[4]),
-            segment[3]))
+        return len(segment[0]) + len(segment[3])
+
+    def draw_segment(self, idx, source=None):
+        if source == "right":
+            segment = self.segments_right[idx]
+            next_segment = self.segments_right[idx - 1] if idx > 0 else None
+        elif source == "down":
+            segment = self.segments_down[idx]
+            next_segment = self.segments_down[idx + 1] if idx < len(self.segments_down)-1 else None
+        else:
+            segment = self.segments[idx]
+            next_segment = self.segments[idx + 1] if idx < len(self.segments)-1 else None
+        
+        if source == "right":
+            return ''.join((
+                self.bgcolor(next_segment[2]) if next_segment else self.reset,
+                self.fgcolor(segment[4]) if next_segment else self.fgcolor(segment[2]),
+                self.separator_right,
+                
+                self.fgcolor(segment[1]),
+                self.bgcolor(segment[2]),
+                segment[0]))
+        else:
+            return ''.join((
+                self.fgcolor(segment[1]),
+                self.bgcolor(segment[2]),
+                segment[0],
+                
+                self.bgcolor(next_segment[2]) if next_segment else self.reset,
+                self.fgcolor(segment[4]) if next_segment else self.fgcolor(segment[2]),
+                self.separator))
 
 def get_valid_cwd():
     """ We check if the current working directory is valid or not. Typically
@@ -138,8 +209,10 @@ if __name__ == "__main__":
             choices=['patched', 'compatible', 'flat'])
     arg_parser.add_argument('--shell', action='store', default='bash',
             help='Set this to your shell type', choices=['bash', 'zsh', 'bare'])
+    arg_parser.add_argument('--width', action='store', type=int,
+            default=0, help='Width of the screen')
     arg_parser.add_argument('prev_error', nargs='?', type=int, default=0,
             help='Error code returned by the last command')
     args = arg_parser.parse_args()
 
-    powerline = Powerline(args, get_valid_cwd())
+    powerline = Powerline(args, get_valid_cwd(), args.width)
