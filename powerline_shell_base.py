@@ -47,7 +47,7 @@ class Powerline:
         'bare': '%s',
     }
 
-    def __init__(self, args, cwd, width=0):
+    def __init__(self, args, cwd, side, width=0):
         self.args = args
         self.cwd = cwd
         mode, shell = args.mode, args.shell
@@ -63,6 +63,7 @@ class Powerline:
         self.segments_down = []
         self.width=width
         self.mode='left'
+        self.side=side
 
     def color(self, prefix, code):
         if code is None:
@@ -92,20 +93,13 @@ class Powerline:
         self.mode = mode
     
     def draw(self):
-        # text = (''.join(self.draw_segment(i) for i in range(len(self.segments)))
-        #         + self.reset) + u' \n \U0001F449  '
-        # if py3:
-        #     return text
-        # else:
-        #     return text.encode('utf-8')
-        
         leftSegmentsText = [self.draw_segment(idx) for idx in range(len(self.segments))]
         rightSegmentsText = [self.draw_segment(idx, "right") for idx in range(len(self.segments_right))]
         downSegmentsText = [self.draw_segment(idx, "down") for idx in range(len(self.segments_down))]
         
-        leftText = u''.join(leftSegmentsText) + self.reset + ' '
+        leftText  = u''.join(leftSegmentsText)  + self.reset + ' '
         rightText = u''.join(rightSegmentsText) + self.reset
-        downText = u''.join(downSegmentsText) + self.reset + ' '
+        downText  = u''.join(downSegmentsText)  + self.reset + ' '
         
         leftRawText  = u''.join([segment[0] + self.separator for segment in self.segments]) + self.reset + ' '
         rightRawText = u''.join([segment[0] + self.separator for segment in self.segments_right]) + self.reset + ' '
@@ -114,7 +108,12 @@ class Powerline:
         rightWidth = len(rightRawText.encode("ascii","replace"))
         spaces = ' ' * (self.width - leftWidth - rightWidth)
         
-        line = leftText + spaces + rightText + "\n" + downText
+        if self.side == 'both':
+            line = leftText + spaces + rightText + "\n" + downText
+        elif self.side == 'right':
+            line = rightText
+        else: #left
+            line = leftText + "\n" + downText
         
         return line
         
@@ -213,6 +212,8 @@ if __name__ == "__main__":
             default=0, help='Width of the screen')
     arg_parser.add_argument('prev_error', nargs='?', type=int, default=0,
             help='Error code returned by the last command')
+    arg_parser.add_argument('--side', action='store', default='both',
+            help='What side to display.', choices=['both', 'left', 'right'])
     args = arg_parser.parse_args()
 
-    powerline = Powerline(args, get_valid_cwd(), args.width)
+    powerline = Powerline(args, get_valid_cwd(), args.side, args.width)
