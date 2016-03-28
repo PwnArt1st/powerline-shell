@@ -3,4 +3,9 @@ def add_hand_segment(powerline):
         hand = u' \U0001F449 '
     else:
         hand = u' \U0001F595 '
-    powerline.append(hand, Color.HOSTNAME_FG, Color.HOSTNAME_BG)
+    bg = Color.CMD_PASSED_BG
+    fg = Color.CMD_PASSED_FG
+    if powerline.args.prev_error != 0:
+        fg = Color.CMD_FAILED_FG
+        bg = Color.CMD_FAILED_BG
+    powerline.append(hand, fg, bg)
