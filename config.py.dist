@@ -6,51 +6,24 @@
 # Add, remove or rearrange these segments to customize what you see on the shell
 # prompt. Any segment you add must be present in the segments/ directory
 
+# segments displayed on the left
 SEGMENTS = [
-# Set the terminal window title to user@host:dir
-#    'set_term_title',
+    'ssh',        # Show a padlock when ssh-ing from another machine
+    'cwd',        # Show the current directory.
+    'read_only',  # Show a padlock if the current user has no write access
+]
 
-# Show current virtual environment (see http://www.virtualenv.org/)
-    'virtual_env',
+# segments displayed on the right
+SEGMENTS_RIGHT = [
+    'git',        # Show the current git branch and status
+    'time',       # Show the current time
+]
 
-# Show the current user's username as in ordinary prompts
-    'username',
-
-# Show the machine's hostname. Mostly used when ssh-ing into other machines
-    'hostname',
-
-# Show a padlock when ssh-ing from another machine
-    'ssh',
-
-# Show the current directory. If the path is too long, the middle part is
-# replaced with ellipsis ('...')
-    'cwd',
-
-# Show a padlock if the current user has no write access to the current
-# directory
-    'read_only',
-
-# Show the current git branch and status
-    'git',
-
-# Show the current mercurial branch and status
-    'hg',
-
-# Show the current svn branch and status
-    'svn',
-
-# Show the current fossil branch and status
-    'fossil',
-
-# Show number of running jobs
-    'jobs',
-
-# Show the last command's exit code if it was non-zero
-#    'exit_code',
-
-# Shows a '#' if the current user is root, '$' otherwise
-# Also, changes color if the last command exited with a non-zero error code
-    'root',
+# segments displayed on the second line
+SEGMENTS_DOWN = [
+    'hostname',   # Show the current hostname
+    'username',   # Show the current user's username
+    'hand',       # Show a 'middlefinger' if root, 'hand' otherwise
 ]
 
 # Change the colors used to draw individual segments in your prompt
