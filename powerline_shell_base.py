@@ -58,6 +58,7 @@ class Powerline:
         mode, shell = args.mode, args.shell
         self.color_template = self.color_templates[shell]
         self.reset = self.color_template % '[0m'
+        self.bold = self.color_template % '[1m'
         self.lock = Powerline.symbols[mode]['lock']
         self.network = Powerline.symbols[mode]['network']
         self.separator = Powerline.symbols[mode]['separator']
